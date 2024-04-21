@@ -1,0 +1,74 @@
+# This file configures github.com/golangci/golangci-lint.
+run:
+  timeout: 3m
+  tests: true
+
+linters:
+  disable-all: true
+  enable:
+    - containedctx
+    - contextcheck
+    - copyloopvar
+    - cyclop
+    - decorder
+    # - depguard # Package imports are in a list of acceptable packages
+    # - dupl # Code clone detection
+    # - deadcode # Unused code, deprecated
+    - errcheck # Unchecked errors
+    - exportloopref # Unpinned variables in go programs
+    - funlen
+    - goconst # Repeated strings that could be replaced by a constant
+    - gocyclo
+    - gofmt # Whether the code was gofmt-ed
+    - govet # Suspicious constructs
+    - gosec # Security problems
+    - gosimple # Simplify a code
+    - goimports # Unused imports
+    - staticcheck # Static analysis checks
+    # - structcheck # Unused struct fields, deprecated
+    - typecheck # Parses and type-checks Go code
+    # - varcheck # Unused global variables and constants, deprecated
+    - ineffassign # Unused assignments to existing variables
+    - rowserrcheck # database/sql.Rows.Err() checked
+    - lll # Long lines
+    - misspell # Misspelled English words in comments
+    - unconvert # Unnecessary type conversions
+    - unparam # Unused function parameters
+    - unused # Unused constants, variables, functions
+    - nakedret # Naked returns in functions greater than a specified function length (?)
+    - nolintlint # Ill-formed or insufficient nolint directives
+    - goprintffuncname # Printf-like functions are named with f at the end
+    - exportloopref # Exporting pointers for loop variables
+    # - revive # Fast, configurable, extensible, flexible, and beautiful linter for Go. Drop-in replacement of golint.
+  fast: true
+
+linters-settings:
+  gofmt:
+    simplify: true
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+  lll:
+    tab-width: 1
+    line-length: 160
+  dupl:
+    threshold: 100
+  funlen:
+    lines: 150
+    statements: 80
+  cyclop:
+    max-complexity: 30
+
+issues:
+  #new-from-rev: origin/main # report only new issues with reference to main branch
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gosec
+        - unparam
+        - lll
+  include:
+    - EXC0012 # EXC0012 revive: Annoying issue about not having a comment. The rare codebase has such comments
+    - EXC0013 # EXC0013 revive: Annoying issue about not having a comment. The rare codebase has such comments
+    - EXC0014 # EXC0014 revive: Annoying issue about not having a comment. The rare codebase has such comments
+    - EXC0015 # EXC0015 revive: Annoying issue about not having a comment. The rare codebase has such comments

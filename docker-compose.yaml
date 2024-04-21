@@ -1,0 +1,177 @@
+version: "3"
+services:
+  db:
+    container_name: db
+    image: postgres:latest
+    restart: always
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    ports:
+      - 5432:5432
+    volumes:
+      - $PWD/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data_auth:/var/lib/postgresql
+    secrets:
+      - db_password
+
+  redis1:
+    image: redis:latest
+    restart: always
+    command: [redis-server, /etc/redis.conf, --port, "7001"]
+    volumes:
+      - $PWD/infra/redis/node-1/conf/redis.conf:/etc/redis.conf
+    ports:
+      - "7001:7001"
+      - "17001:17001"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-p", "7001", "cluster", "info" ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+  redis2:
+    image: redis:latest
+    restart: always
+    command: [redis-server, /etc/redis.conf, --port, "7002"]
+    volumes:
+      - $PWD/infra/redis/node-2/conf/redis.conf:/etc/redis.conf
+    ports:
+      - "7002:7002"
+      - "17002:17002"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-p", "7002", "cluster", "info" ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+  redis3:
+    image: redis:latest
+    restart: always
+    command: [redis-server, /etc/redis.conf, --port, "7003"]
+    volumes:
+      - $PWD/infra/redis/node-3/conf/redis.conf:/etc/redis.conf
+    ports:
+      - "7003:7003"
+      - "17003:17003"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-p", "7003", "cluster", "info" ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+  redis4:
+    image: redis:latest
+    restart: always
+    command: [redis-server, /etc/redis.conf, --port, "7004"]
+    volumes:
+      - $PWD/infra/redis/node-4/conf/redis.conf:/etc/redis.conf
+    ports:
+      - "7004:7004"
+      - "17004:17004"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-p", "7004", "cluster", "info" ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    depends_on:
+      - redis1
+      - redis2
+      - redis3
+  redis5:
+    image: redis:latest
+    restart: always
+    command: [redis-server, /etc/redis.conf, --port, "7005"]
+    volumes:
+      - $PWD/infra/redis/node-5/conf/redis.conf:/etc/redis.conf
+    ports:
+      - "7005:7005"
+      - "17005:17005"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-p", "7005", "cluster", "info" ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    depends_on:
+      - redis1
+      - redis2
+      - redis3
+  redis6:
+    image: redis:latest
+    restart: always
+    command: [redis-server, /etc/redis.conf, --port, "7006"]
+    volumes:
+      - $PWD/infra/redis/node-6/conf/redis.conf:/etc/redis.conf
+    ports:
+      - "7006:7006"
+      - "17006:17006"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-p", "7006", "cluster", "info" ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    depends_on:
+      - redis1
+      - redis2
+      - redis3
+  redis-cluster-creator:
+    image: redis:latest
+    entrypoint: [/bin/sh,-c,'echo "yes" | redis-cli -a password --cluster create redis1:7001 redis2:7002 redis3:7003 redis4:7004 redis5:7005 redis6:7006 --cluster-replicas 1']
+    depends_on:
+      redis1:
+        condition: service_healthy
+      redis2:
+        condition: service_healthy
+      redis3:
+        condition: service_healthy
+      redis4:
+        condition: service_healthy
+      redis5:
+        condition: service_healthy
+      redis6:
+        condition: service_healthy
+
+  redis-insight:
+    container_name: redis-insight
+    image: redislabs/redisinsight:1.14.0
+    ports:
+      - "8001:8001"
+    volumes:
+      - redisinsight_data:/db
+
+  nats:
+    container_name: nats
+    restart: unless-stopped
+    image: nats:latest
+    command: [-js, -m, "8222"]
+    ports:
+      - 4222:4222
+      - 6222:6222
+      - 8222:8222
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    volumes:
+      - $PWD/infra/prometheus/prometheus.dev.yaml:/etc/prometheus/prometheus.yaml
+    command: --config.file=/etc/prometheus/prometheus.yaml
+    ports:
+      - 9090:9090
+
+  jaeger:
+    container_name: jaeger
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - 4317:4317
+      - 14268:14268
+      - 16686:16686
+
+volumes:
+  postgres_data_auth:
+  postgres_data_product:
+  postgres_data_order:
+  postgres_data_payment:
+  redisinsight_data:
+
+secrets:
+  db_password:
+    file: db_password.txt

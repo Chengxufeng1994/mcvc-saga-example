@@ -1,0 +1,46 @@
+log:
+  level: debug
+
+postgres:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: password
+  db_name: products
+  max_idle_conns: 10
+  max_open_conns: 100
+
+redis:
+  type: cluster
+  addrs: :7001,:7002,:7003,:7004,:7005,:7006
+  password: password
+  db: 0
+  pool_size: 40
+  pool_timeout: 3
+  read_only: false
+  max_retries: 5
+  subscriber:
+    # will be randomly generated if not specified
+    consumer_id: ""
+    # should not have consumer group to avoid message loss when running multiple replicas
+    consumer_group: ""
+
+nats:
+  host: 127.0.0.1
+  port: 4222
+  subscriber:
+    queue_group: product
+    durable_name: product_subscriber
+
+
+jaeger:
+  endpoint: localhost:4317
+
+jwt:
+  secret: password
+  access_token_expires: 10800
+  refresh_token_expires: 86400
+
+rpc_endpoints:
+  auth_service_host: localhost:9011
+  product_service_host: localhost:9013
